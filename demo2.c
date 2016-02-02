@@ -1,38 +1,52 @@
 #include <gtk/gtk.h>
 
-static void
-print_hello (GtkWidget *widget,
-             gpointer   data)
-{
-  GtkApplication *app = GTK_APPLICATION (data);
-  GAction *action;
-  g_print ("Hello World\n");
+static void right_click ();
 
-  action = g_action_map_lookup_action (G_ACTION_MAP (app), "incendio");
-  g_action_activate (action, NULL);
+static void
+button_pressed (GtkWidget *widget, GdkEventButton *event)
+{
+  /*
+   *Simulated right click here:
+   *This function will run if any button is pressed on mouse.
+   *So we explicitly emit "clicked" signal to show the menu
+   *when event->button = 3 i.e. the right click.
+   *See : https://developer.gnome.org/gdk3/stable/gdk3-Event-Structures.html#GdkEventButton
+   */
+
+   if (event->button != 3)
+    return;
+
+   else
+    {
+      g_signal_connect_after (GTK_BUTTON (widget), "clicked", G_CALLBACK (right_click), NULL);
+      g_signal_emit_by_name (GTK_BUTTON (widget), "clicked");
+    }
+
 }
 
 static void
 expelliarmus_func ()
 {
-  g_print ("expelliarmus clicked\n");
+  g_print ("Member: Expelliarmus clicked\n");
 }
-
 
 static void
 incendio_func ()
 {
-  g_print ("incendio clicked\n");
+  g_print ("Member: Incendio clicked\n");
 }
 
-
+static void
+right_click ()
+{
+  g_print ("Right Button Clickedasd !\n");
+}
 
 static void
 activate (GtkApplication *app,
           gpointer        user_data)
 {
   GtkWidget *window;
-  GtkWidget *button;
   GtkWidget *button_box;
   GSimpleAction *incendio; 
   GSimpleAction *expelliarmus;
@@ -47,15 +61,10 @@ activate (GtkApplication *app,
   button_box = gtk_button_box_new (GTK_ORIENTATION_HORIZONTAL);
   gtk_container_add (GTK_CONTAINER (window), button_box);
 
-  button = gtk_button_new_with_label ("Hello World");
-  g_signal_connect (button, "clicked", G_CALLBACK (print_hello), app);
-  g_signal_connect_swapped (button, "clicked", G_CALLBACK (gtk_widget_destroy), window);
-  gtk_container_add (GTK_CONTAINER (button_box), button);
  
   incendio = g_simple_action_new ("incendio",NULL);
   g_signal_connect_swapped (incendio, "activate", G_CALLBACK (incendio_func), NULL);
   g_action_map_add_action (G_ACTION_MAP (app), G_ACTION (incendio));
-  g_simple_action_set_enabled (incendio, TRUE);
 
   expelliarmus = g_simple_action_new ("expelliarmus",NULL);
   g_action_map_add_action (G_ACTION_MAP (app), G_ACTION (expelliarmus));
@@ -66,7 +75,9 @@ activate (GtkApplication *app,
   builder = gtk_builder_new_from_file ("/home/uajain/app.ui");
   menu_model = G_MENU_MODEL (gtk_builder_get_object (builder, "menu"));
   gtk_menu_button_set_menu_model (GTK_MENU_BUTTON (menu_button), menu_model);
-   gtk_container_add (GTK_CONTAINER (button_box), menu_button);
+  g_signal_connect (menu_button, "button-press-event", G_CALLBACK (button_pressed), app);
+
+  gtk_container_add (GTK_CONTAINER (button_box), menu_button);
   g_object_unref (builder);
 
   gtk_widget_show_all (window);
