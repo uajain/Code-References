@@ -2,6 +2,9 @@
 
 static void right_click ();
 
+void
+expelliarmus_func ();
+
 static void
 button_pressed (GtkWidget *widget, GdkEventButton *event)
 {
@@ -14,17 +17,18 @@ button_pressed (GtkWidget *widget, GdkEventButton *event)
    */
 
    if (event->button != 3)
+   { expelliarmus_func ();
     return;
-
+  }
    else
     {
-      g_signal_connect_after (GTK_BUTTON (widget), "clicked", G_CALLBACK (right_click), NULL);
+      g_signal_connect (GTK_BUTTON (widget), "clicked", G_CALLBACK (right_click), NULL);
       g_signal_emit_by_name (GTK_BUTTON (widget), "clicked");
     }
 
 }
 
-static void
+void
 expelliarmus_func ()
 {
   g_print ("Member: Expelliarmus clicked\n");
@@ -32,9 +36,9 @@ expelliarmus_func ()
 
 static void
 incendio_func ()
-{
-  g_print ("Member: Incendio clicked\n");
+{  g_print ("Member: Incendio clicked\n");
 }
+
 
 static void
 right_click ()
@@ -53,6 +57,7 @@ activate (GtkApplication *app,
   GMenuModel *menu_model;
   GtkWidget *menu_button;
   GtkBuilder *builder;
+  GtkWidget *button;
 
   window = gtk_application_window_new (app);
   gtk_window_set_title (GTK_WINDOW (window), "Window");
@@ -60,7 +65,7 @@ activate (GtkApplication *app,
 
   button_box = gtk_button_box_new (GTK_ORIENTATION_HORIZONTAL);
   gtk_container_add (GTK_CONTAINER (window), button_box);
-
+  button = gtk_button_new ();
  
   incendio = g_simple_action_new ("incendio",NULL);
   g_signal_connect_swapped (incendio, "activate", G_CALLBACK (incendio_func), NULL);
@@ -74,8 +79,9 @@ activate (GtkApplication *app,
 
   builder = gtk_builder_new_from_file ("/home/uajain/app.ui");
   menu_model = G_MENU_MODEL (gtk_builder_get_object (builder, "menu"));
-  gtk_menu_button_set_menu_model (GTK_MENU_BUTTON (menu_button), menu_model);
+  gtk_menu_button_set_menu_model (GTK_MENU_BUTTON (button), menu_model);
   g_signal_connect (menu_button, "button-press-event", G_CALLBACK (button_pressed), app);
+  g_signal_connect (menu_button, "clicked", G_CALLBACK (expelliarmus_func), NULL);
 
   gtk_container_add (GTK_CONTAINER (button_box), menu_button);
   g_object_unref (builder);
